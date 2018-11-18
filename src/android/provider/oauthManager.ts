@@ -21,7 +21,7 @@ import { Credentials } from '../../common/credentials';
 import { PKCE } from './pkce';
 import { Auth0 } from '../auth0';
 import { AuthenticationAPIClient } from '../authentication/authenticationAPIClient';
-import { authenticateUsingBrowser } from './authenticationActivity';
+import { authenticateUsingBrowser, authenticateUsingWebView } from './authenticationActivity';
 
 
 export class OAuthManager {
@@ -87,7 +87,7 @@ export class OAuthManager {
         Log.d(OAuthManager.TAG, 'Built authorize uri');
         this.requestCode = requestCode;
 
-        authenticateUsingBrowser(activity, uri, this.ctOptions);
+        authenticateUsingWebView(activity, uri, requestCode, 'Login Naranja', true);
     }
 
     public resumeAuthorization(data: AuthorizeResult): boolean {

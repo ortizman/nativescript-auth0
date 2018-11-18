@@ -1,5 +1,6 @@
 
 import Context = android.content.Context;
+import Activity = android.app.Activity;
 import Intent = android.content.Intent;
 import Uri = android.net.Uri;
 import Bundle = android.os.Bundle;
@@ -8,6 +9,7 @@ import Log = android.util.Log;
 import { CustomTabsOptions } from './customTabsOptions';
 import { WebAuthProvider } from './webAuthProvider';
 import { CustomTabsController } from './customTabsController';
+import { WebAuthActivity, FULLSCREEN_EXTRA, CONNECTION_NAME_EXTRA } from './webAuthActivity';
 
 const TAG: string = 'AuthenticationActivity';
 
@@ -15,7 +17,8 @@ export const EXTRA_CONNECTION_NAME: string = "org.nativescript.auth0.EXTRA_CONNE
 export const EXTRA_AUTHORIZE_URI: string = "org.nativescript.auth0.EXTRA_AUTHORIZE_URI";
 export const EXTRA_INTENT_LAUNCHED: string = "org.nativescript.auth0.EXTRA_INTENT_LAUNCHED";
 export const EXTRA_CT_OPTIONS: string = "org.nativescript.auth0.EXTRA_CT_OPTIONS";
-
+export const EXTRA_USE_BROWSER: string = "org.nativescript.auth0.EXTRA_USE_BROWSER"
+export const EXTRA_USE_FULL_SCREEN: string = "org.nativescript.auth0.EXTRA_USE_FULL_SCREEN"
 
 export function authenticateUsingBrowser(context: Context, authorizeUri: Uri, options: CustomTabsOptions = undefined): void {
     Log.d(TAG, 'Building intent');
@@ -28,10 +31,26 @@ export function authenticateUsingBrowser(context: Context, authorizeUri: Uri, op
     intent.putExtra(EXTRA_CT_OPTIONS, options);
     Log.d(TAG, 'Put extra 2');
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    Log.d(TAG, 'Starting authentication...');
+    Log.d(TAG, 'Starting authentication..');
     context.startActivity(intent);
 }
 
+export function authenticateUsingWebView(activity: Activity, authorizeUri: Uri, requestCode: number, connection: string, useFullScreen: boolean = true): void {
+    Log.d(TAG, 'Building activity');
+    const clazz = AuthenticationActivity.class;
+    Log.d(TAG, 'Got class');
+    const intent = new Intent(activity, clazz);
+    Log.d(TAG, 'Init intent');
+    intent.putExtra(EXTRA_AUTHORIZE_URI, authorizeUri);
+    Log.d(TAG, 'Put extra 1');
+    intent.putExtra(EXTRA_USE_BROWSER, false);
+    Log.d(TAG, 'Put extra 2');
+    intent.putExtra(EXTRA_USE_FULL_SCREEN, useFullScreen);
+
+    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    Log.d(TAG, 'Starting authentication...');
+    activity.startActivityForResult(intent, requestCode);
+}
 @JavaProxy('org.nativescript.auth0.AuthenticationActivity')
 export class AuthenticationActivity extends android.app.Activity {
     private intentLaunched: boolean;
@@ -87,6 +106,7 @@ export class AuthenticationActivity extends android.app.Activity {
 
     public onDestroy(): void {
         super.onDestroy();
+
         if (this.customTabsController != null) {
             this.customTabsController.unbindService();
             this.customTabsController = null;
@@ -97,10 +117,17 @@ export class AuthenticationActivity extends android.app.Activity {
         const extras = this.getIntent().getExtras();
         const authorizeUri = extras.getParcelable(EXTRA_AUTHORIZE_URI) as Uri;
 
-        this.customTabsController = this.createCustomTabsController(this);
-        this.customTabsController.setCustomizationOptions(extras.getParcelable(EXTRA_CT_OPTIONS) as CustomTabsOptions);
-        this.customTabsController.bindService();
-        this.customTabsController.launchUri(authorizeUri);
+        let intent: Intent = new Intent(this, WebAuthActivity.class);
+        intent.setData(authorizeUri);
+        intent.putExtra(CONNECTION_NAME_EXTRA, 'Naranja Login');
+        intent.putExtra(FULLSCREEN_EXTRA, true);
+        //The request code value can be ignored
+        this.startActivityForResult(intent, 33);
+
+        // this.customTabsController = this.createCustomTabsController(this);
+        // this.customTabsController.setCustomizationOptions(extras.getParcelable(EXTRA_CT_OPTIONS) as CustomTabsOptions);
+        // this.customTabsController.bindService();
+        // this.customTabsController.launchUri(authorizeUri);
     }
 
     public createCustomTabsController(context: Context): CustomTabsController {
