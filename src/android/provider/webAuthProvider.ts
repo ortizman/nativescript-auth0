@@ -40,6 +40,7 @@ export class WebAuthProvider {
     private pkce: PKCE;
     private scheme: string;
     private ctOptions: CustomTabsOptions;
+    private hostedPageParams: { [key: string]: string };
 
     /**
      * Initialize the WebAuthProvider instance with an account. Additional settings can be configured,
@@ -168,6 +169,11 @@ export class WebAuthProvider {
         return this;
     }
 
+    public withHostedPageParams(parameters: { [key: string]: string }): WebAuthProvider {
+        this.hostedPageParams = parameters;
+        return this;
+    }
+
     /**
      * Use the given connection. By default no connection is specified, so the login page will be displayed.
      *
@@ -230,6 +236,7 @@ export class WebAuthProvider {
         const manager: OAuthManager = new OAuthManager(this.account, callback, this.values);
         manager.setCustomTabsOptions(this.ctOptions);
         manager.setPKCE(this.pkce);
+        manager.setHostedPageParams(this.hostedPageParams);
 
         WebAuthProvider.managerInstance = manager;
 

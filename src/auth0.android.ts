@@ -61,6 +61,9 @@ export class Auth0 extends Auth0Common {
         if (options.parameters != null) {
             webAuth.withParameters(options.parameters);
         }
+        if (options.hostedPageParameters) {
+            webAuth.withHostedPageParams(options.hostedPageParameters);
+        }
 
         return new Promise((resolve, reject) => {
             try {

@@ -57,9 +57,10 @@ export class OAuthManager {
     private readonly account: Auth0;
     private readonly callback: AuthCallback;
     private readonly parameters: { [key: string]: string };
-
+    
     private requestCode: number;
     private pkce: PKCE;
+    private hostedPageParams: { [key: string]: string };
     private currentTimeInMillis: number;
     private ctOptions: CustomTabsOptions;
 
@@ -77,6 +78,13 @@ export class OAuthManager {
         this.pkce = pkce;
     }
 
+    /**
+     * setHostedPageParams
+     */
+    public setHostedPageParams(pageParams: { [key: string]: string }) {
+        this.hostedPageParams = pageParams;
+    }
+
     public startAuthorization(activity: Activity, redirectUri: string, requestCode: number) {
         this.addPKCEParameters(this.parameters, redirectUri);
         this.addClientParameters(this.parameters, redirectUri);
@@ -87,7 +95,7 @@ export class OAuthManager {
         Log.d(OAuthManager.TAG, 'Built authorize uri');
         this.requestCode = requestCode;
 
-        authenticateUsingWebView(activity, uri, requestCode, 'Login Naranja', true);
+        authenticateUsingWebView(activity, uri, requestCode, 'Login Naranja', true, this.hostedPageParams);
     }
 
     public resumeAuthorization(data: AuthorizeResult): boolean {

@@ -20,6 +20,7 @@ export declare class WebAuthProvider {
     private pkce;
     private scheme;
     private ctOptions;
+    private hostedPageParams;
     constructor(account: Auth0);
     withState(state: string): WebAuthProvider;
     withNonce(nonce: string): WebAuthProvider;
@@ -29,6 +30,9 @@ export declare class WebAuthProvider {
     withConnectionScope(...connectionScope: string[]): WebAuthProvider;
     withResponseType(type: ResponseType): WebAuthProvider;
     withParameters(parameters: {
+        [key: string]: string;
+    }): WebAuthProvider;
+    withHostedPageParams(parameters: {
         [key: string]: string;
     }): WebAuthProvider;
     withConnection(connectionName: string): WebAuthProvider;

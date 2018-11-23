@@ -17,8 +17,9 @@ export const EXTRA_CONNECTION_NAME: string = "org.nativescript.auth0.EXTRA_CONNE
 export const EXTRA_AUTHORIZE_URI: string = "org.nativescript.auth0.EXTRA_AUTHORIZE_URI";
 export const EXTRA_INTENT_LAUNCHED: string = "org.nativescript.auth0.EXTRA_INTENT_LAUNCHED";
 export const EXTRA_CT_OPTIONS: string = "org.nativescript.auth0.EXTRA_CT_OPTIONS";
-export const EXTRA_USE_BROWSER: string = "org.nativescript.auth0.EXTRA_USE_BROWSER"
-export const EXTRA_USE_FULL_SCREEN: string = "org.nativescript.auth0.EXTRA_USE_FULL_SCREEN"
+export const EXTRA_USE_BROWSER: string = "org.nativescript.auth0.EXTRA_USE_BROWSER";
+export const EXTRA_USE_FULL_SCREEN: string = "org.nativescript.auth0.EXTRA_USE_FULL_SCREEN";
+export const EXTRA_PAGE_PARAMS: string = "org.nativescript.auth0.page_params";
 
 export function authenticateUsingBrowser(context: Context, authorizeUri: Uri, options: CustomTabsOptions = undefined): void {
     Log.d(TAG, 'Building intent');
@@ -35,7 +36,7 @@ export function authenticateUsingBrowser(context: Context, authorizeUri: Uri, op
     context.startActivity(intent);
 }
 
-export function authenticateUsingWebView(activity: Activity, authorizeUri: Uri, requestCode: number, connection: string, useFullScreen: boolean = true): void {
+export function authenticateUsingWebView(activity: Activity, authorizeUri: Uri, requestCode: number, connection: string, useFullScreen: boolean = true, hostedPageParams: { [key: string]: string }): void {
     Log.d(TAG, 'Building activity');
     const clazz = AuthenticationActivity.class;
     Log.d(TAG, 'Got class');
@@ -46,6 +47,12 @@ export function authenticateUsingWebView(activity: Activity, authorizeUri: Uri, 
     intent.putExtra(EXTRA_USE_BROWSER, false);
     Log.d(TAG, 'Put extra 2');
     intent.putExtra(EXTRA_USE_FULL_SCREEN, useFullScreen);
+    Log.d(TAG, 'Put extra 3');
+    intent.putExtra(EXTRA_CONNECTION_NAME, connection);
+
+    if (hostedPageParams) {
+        intent.putExtra(EXTRA_PAGE_PARAMS, JSON.stringify(hostedPageParams));
+    }
 
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     Log.d(TAG, 'Starting authentication...');
@@ -120,7 +127,8 @@ export class AuthenticationActivity extends android.app.Activity {
         let intent: Intent = new Intent(this, WebAuthActivity.class);
         intent.setData(authorizeUri);
         intent.putExtra(CONNECTION_NAME_EXTRA, 'Naranja Login');
-        intent.putExtra(FULLSCREEN_EXTRA, true);
+        intent.putExtra(FULLSCREEN_EXTRA, false);
+        intent.putExtra(EXTRA_PAGE_PARAMS, extras.getString(EXTRA_PAGE_PARAMS));
         //The request code value can be ignored
         this.startActivityForResult(intent, 33);
 

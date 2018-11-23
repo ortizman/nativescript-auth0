@@ -19,6 +19,7 @@ import Window = android.view.Window;
 import WindowManager = android.view.WindowManager;
 import ActionBar = android.support.v7.app.ActionBar;
 import ApplicationInfo = android.content.pm.ApplicationInfo;
+import { EXTRA_PAGE_PARAMS } from "./authenticationActivity";
 
 const TAG: string = 'WebAuthActivity';
 
@@ -49,7 +50,7 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
             }
         }
 
-        if (this.getIntent().getBooleanExtra(FULLSCREEN_EXTRA, true)) {
+        if (this.getIntent().getBooleanExtra(FULLSCREEN_EXTRA, false)) {
             this.setFullscreenMode();
         }
 
@@ -154,6 +155,16 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
                 thiz.progressBar.setIndeterminate(true);
                 thiz.progressBar.setVisibility(View.GONE);
                 const isShowingError: boolean = thiz.errorView.getVisibility() == View.VISIBLE;
+
+                let params = thiz.getIntent().getStringExtra(EXTRA_PAGE_PARAMS);
+                // load username and dni
+                let functionInvoke = "loadParameters(" + params + ")";
+                if (android.os.Build.VERSION.SDK_INT >= 19) {
+                    view['evaluateJavascript'](functionInvoke, null);
+                } else {
+                    view.loadUrl(functionInvoke);
+                }
+
                 thiz.webView.setVisibility(isShowingError ? View.INVISIBLE : View.VISIBLE);
             }
 
