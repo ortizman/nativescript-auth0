@@ -78,7 +78,7 @@ export class Auth0 extends Auth0Common {
                     onSuccess: (credentials: Credentials) => {
                         resolve(credentials);
                     }
-                });
+                }, 123);
             } catch (e) {
                 reject(e);
             }

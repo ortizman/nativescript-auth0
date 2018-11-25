@@ -50,13 +50,11 @@ export function authenticateUsingWebView(activity: Activity, authorizeUri: Uri, 
     Log.d(TAG, 'Put extra 3');
     intent.putExtra(EXTRA_CONNECTION_NAME, connection);
 
-    if (hostedPageParams) {
-        intent.putExtra(EXTRA_PAGE_PARAMS, JSON.stringify(hostedPageParams));
-    }
+    intent.putExtra(EXTRA_PAGE_PARAMS, JSON.stringify(hostedPageParams));
 
     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     Log.d(TAG, 'Starting authentication...');
-    activity.startActivityForResult(intent, requestCode);
+    activity.startActivity(intent);
 }
 @JavaProxy('org.nativescript.auth0.AuthenticationActivity')
 export class AuthenticationActivity extends android.app.Activity {
@@ -69,13 +67,16 @@ export class AuthenticationActivity extends android.app.Activity {
     }
 
     public onNewIntent(intent: Intent): void {
+        if (WebAuthProvider.resumes(intent)) {
+            return;
+        }
         super.onNewIntent(intent);
         this.setIntent(intent);
     }
 
     public onActivityResult(requestCode: number, resultCode: number, data: Intent): void {
         if (resultCode === android.app.Activity.RESULT_OK) {
-            this.deliverSuccessfulAuthenticationResult(data);
+            this.deliverSuccessfulAuthenticationResult(requestCode, resultCode, data);
         }
         this.finish();
     }
@@ -105,7 +106,7 @@ export class AuthenticationActivity extends android.app.Activity {
         }
 
         if (this.getIntent().getData() != null) {
-            this.deliverSuccessfulAuthenticationResult(this.getIntent());
+            this.deliverSuccessfulAuthenticationResult(0, 0, this.getIntent());
         }
         this.setResult(android.app.Activity.RESULT_CANCELED);
         this.finish();
@@ -129,6 +130,7 @@ export class AuthenticationActivity extends android.app.Activity {
         intent.putExtra(CONNECTION_NAME_EXTRA, 'Naranja Login');
         intent.putExtra(FULLSCREEN_EXTRA, false);
         intent.putExtra(EXTRA_PAGE_PARAMS, extras.getString(EXTRA_PAGE_PARAMS));
+
         //The request code value can be ignored
         this.startActivityForResult(intent, 33);
 
@@ -142,7 +144,7 @@ export class AuthenticationActivity extends android.app.Activity {
         return new CustomTabsController(context);
     }
 
-    public deliverSuccessfulAuthenticationResult(result: Intent): void {
-        WebAuthProvider.resume(result);
+    public deliverSuccessfulAuthenticationResult(requestCode: number, resultCode: number, result: Intent): void {
+        WebAuthProvider.resume(requestCode, resultCode, result);
     }
 }

@@ -39,6 +39,7 @@ export declare class OAuthManager {
     private hostedPageParams;
     private currentTimeInMillis;
     private ctOptions;
+    private useBrowser;
     constructor(account: Auth0, callback: AuthCallback, parameters: {
         [key: string]: string;
     });
@@ -47,6 +48,7 @@ export declare class OAuthManager {
     setHostedPageParams(pageParams: {
         [key: string]: string;
     }): void;
+    withBrowser(withBrowser: boolean): void;
     startAuthorization(activity: Activity, redirectUri: string, requestCode: number): void;
     resumeAuthorization(data: AuthorizeResult): boolean;
     private getCurrentTimeInMillis;
