@@ -63,11 +63,13 @@ export class OAuthManager {
     private hostedPageParams: { [key: string]: string };
     private currentTimeInMillis: number;
     private ctOptions: CustomTabsOptions;
+    private useBrowser: boolean;
 
     constructor(account: Auth0, callback: AuthCallback, parameters: { [key: string]: string }) {
         this.account = account;
         this.callback = callback;
         this.parameters = parameters;
+        this.useBrowser = false;
     }
 
     public setCustomTabsOptions(options: CustomTabsOptions | undefined) {
@@ -85,6 +87,13 @@ export class OAuthManager {
         this.hostedPageParams = pageParams;
     }
 
+    /**
+     * useBrowser
+     */
+    public withBrowser(withBrowser: boolean) {
+        this.useBrowser = withBrowser;
+    }
+
     public startAuthorization(activity: Activity, redirectUri: string, requestCode: number) {
         this.addPKCEParameters(this.parameters, redirectUri);
         this.addClientParameters(this.parameters, redirectUri);
@@ -95,7 +104,11 @@ export class OAuthManager {
         Log.d(OAuthManager.TAG, 'Built authorize uri');
         this.requestCode = requestCode;
 
-        authenticateUsingWebView(activity, uri, requestCode, 'Login Naranja', true, this.hostedPageParams);
+        if(this.useBrowser) {
+            authenticateUsingBrowser(activity, uri, this.ctOptions);
+        } else {
+            authenticateUsingWebView(activity, uri, requestCode, 'Login Naranja', true, this.hostedPageParams);
+        }
     }
 
     public resumeAuthorization(data: AuthorizeResult): boolean {
