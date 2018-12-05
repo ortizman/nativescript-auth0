@@ -6,6 +6,7 @@ import {
 } from './auth0-common';
 import { Auth0Authentication } from './ios/auth0Authentication';
 import { SafariWebAuth } from './ios/safariWebAuth';
+import { InAppBrowserWebAuth } from './ios/InAppBrowserWebAuth';
 import { ResponseType as iOSResponseType } from './ios/responseType';
 import { a0_url } from './ios/utils';
 import { Credentials } from './common/credentials';
@@ -32,7 +33,12 @@ export class Auth0 extends Auth0Common {
     }
 
     public webAuthentication(options: WebAuthOptions): Promise<Credentials> {
-        const auth = SafariWebAuth.init(this.clientId, a0_url(this.domain));
+        let auth;
+        if (!options.parameters["useBrowser"]){
+            auth = InAppBrowserWebAuth.init(this.clientId, a0_url(this.domain));
+        } else {
+            auth = SafariWebAuth.init(this.clientId, a0_url(this.domain));
+        }
 
         if (options.audience != null) {
             auth.setAudience(options.audience);
@@ -130,6 +136,8 @@ export class Auth0 extends Auth0Common {
                 this.authenticationApi
                     .userInfo(accessToken)
                     .start((result) => {
+                        console.log("USERINFO DEL PLUGIN----------------");
+                        console.log(result);
                         if (result.failure != null) {
                             reject(result.failure);
                         } else {
