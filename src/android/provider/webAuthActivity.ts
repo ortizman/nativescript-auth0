@@ -29,6 +29,7 @@ const TAG: string = 'WebAuthActivity';
 export const KEY_REDIRECT_URI: string = "redirect_uri";
 export const CONNECTION_NAME_EXTRA: string = "serviceName";
 export const FULLSCREEN_EXTRA: string = "fullscreen";
+
 @JavaProxy('org.nativescript.auth0.WebAuthActivity')
 export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
 
@@ -46,6 +47,11 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
         this.setResult(android.app.Activity.RESULT_OK, intent);
         this.webView.destroy();
         this.finish();
+    }
+
+    public back(): void {
+        this.webView.destroy();
+        this.finish();        
     }
 
     public onCreate(savedInstanceState?: Bundle) {
@@ -123,6 +129,7 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
         const intent: Intent = this.getIntent();
         const uri: Uri = intent.getData();
         const redirectUrl: string = uri.getQueryParameter(KEY_REDIRECT_URI);
+        const backRedirectUrl: string = 'naranja://webview.back';
 
         this.webView.setWebViewClient(new class extends WebViewClient {
 
@@ -142,7 +149,7 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
 
                     // if android api < 19 then remembered login is not supported
                     if (android.os.Build.VERSION.SDK_INT >= 19) {
-                        let expresion = "$('#login-usercode').val()";
+                        let expresion = "$('#remember-data').is(':checked') ? { username: $('#login-username').val(), usercode: $('#login-usercode').val(), remember: true } : { remember: false }";
                         view['evaluateJavascript'](expresion, new class extends ValueCallback<java.lang.String> {
 
                             private webAuth: WebAuthActivity = null;
@@ -156,24 +163,37 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
                                 this.urlString = url;
                             }
 
-                            onReceiveValue(uc: java.lang.String): void {
-                                if (uc && uc.toString() != 'null') {
-                                    let uname = JSON.parse(uc.toString());
-                                    this.urlString = this.urlString + "&uc=" + uname;
+                            onReceiveValue(data: java.lang.String): void {
+                                if (data && 
+                                    data.toString() != 'null') {
+
+                                    let formData = JSON.parse(data.toString());
+                                    if(formData.remember) {
+                                        this.urlString = this.urlString + "&uc=" + formData.usercode;
+                                        this.urlString = this.urlString + "&un=" + formData.username;
+                                        this.urlString = this.urlString + "&rem=" + formData.remember;
+                                    }
                                 }
                                 this.intent.setData(Uri.parse(this.urlString));
                                 this.webAuth.killActivity(this.intent);
                             }
                         }(this.webAuth, intent, urlString))
                     } else {
-                        intent.setData(Uri.parse(urlString));
-                        this.webAuth.killActivity(intent);
+                    	intent.setData(Uri.parse(urlString));
+                    	this.webAuth.killActivity(intent);
                     }
                     return true;
                 }
+
+                if(urlString.startsWith(backRedirectUrl)) {
+                    this.webAuth.back();
+                    return true;
+                }
+
                 view.setVisibility(View.VISIBLE);
                 return false;
             }
+
 
             public onPageFinished(view: WebView, url: string) {
                 super.onPageFinished(view, url);
@@ -199,11 +219,13 @@ export class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
             }
 
         }(this));
+
         const settings: WebSettings = this.webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setSupportZoom(true);
         settings.setBuiltInZoomControls(true);
         this.webView.loadUrl(uri.toString());
+
     }
 
     private renderLoadError(description: string): void {
