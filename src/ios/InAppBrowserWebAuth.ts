@@ -18,6 +18,9 @@ import { SilentSafariViewController } from './silentSafariViewController';
 import { Auth0Authentication } from './auth0Authentication';
 import { InAppBrowserViewController } from './InAppBrowserViewController';
 import { AuthSession } from './authSession';
+import {
+    WebAuthOptions, CredentialsExtrasKey
+} from './../auth0-common';
 
 export class InAppBrowserWebAuth extends WebAuth {
 
@@ -35,18 +38,27 @@ export class InAppBrowserWebAuth extends WebAuth {
     public responseType: ResponseType[] = [ResponseType.code];
     public nonce: string | undefined;
     private authenticationSession: boolean = true;
+    private options: WebAuthOptions;
+
 
     public static init(clientId: string, url: NSURL, presenter: ControllerModalPresenter = new ControllerModalPresenter(), telemetry: Telemetry = new Telemetry()): InAppBrowserWebAuth {
-        return new InAppBrowserWebAuth(clientId, url, presenter, TransactionStore.shared, telemetry);
+        return new InAppBrowserWebAuth(clientId, url, presenter, TransactionStore.shared, telemetry, null);
     }
 
-    constructor(clientId: string, url: NSURL, presenter: ControllerModalPresenter, storage: TransactionStore, telemetry: Telemetry) {
+    public static initWithOptions(clientId: string, url: NSURL, options: WebAuthOptions): InAppBrowserWebAuth {
+        let presenter: ControllerModalPresenter = new ControllerModalPresenter();
+        let telemetry: Telemetry = new Telemetry();
+        return new InAppBrowserWebAuth(clientId, url, presenter, TransactionStore.shared, telemetry, options);
+    }
+
+    constructor(clientId: string, url: NSURL, presenter: ControllerModalPresenter, storage: TransactionStore, telemetry: Telemetry, options: WebAuthOptions) {
         super();
         this.clientId = clientId;
         this.url = url;
         this.presenter = presenter;
         this.storage = storage;
         this.telemetry = telemetry;
+        this.options=options;
     }
 
     public useUniversalLink(): this {
@@ -127,6 +139,7 @@ export class InAppBrowserWebAuth extends WebAuth {
         const session = new AuthSession(redirectURL, state, handler, finish, this.logger);
 
         controller.loadUrl(authorizeURL);
+        controller.setOptions(this.options);
         controller.init();
         this.presenter.present(controller);
 
@@ -151,6 +164,23 @@ export class InAppBrowserWebAuth extends WebAuth {
             } else {
                 invokeOnRunLoop(() => {
                     presenting.dismissViewControllerAnimatedCompletion(true, () => {
+                        if (result.success){
+                            let remember:boolean=NSUserDefaults.standardUserDefaults.boolForKey("remember");
+                            result.success.extras={};
+                            if (remember){
+                                result.success.extras.remember="true";
+                                result.success.extras.dni=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.DNI);
+                                result.success.extras.usercode=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERCODE);
+                                result.success.extras.username=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERNAME);
+                            } else {
+                                result.success.extras.remember="false";
+                                result.success.extras.dni=null;
+                                result.success.extras.usercode=null;
+                                result.success.extras.username=null;
+                            }
+                        
+                            
+                        }
                         callback(result);
                     });
                 });

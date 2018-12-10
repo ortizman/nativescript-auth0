@@ -36,7 +36,7 @@ export class Auth0 extends Auth0Common {
         let auth;
 
         if (!options.parameters["useBrowser"] || options.parameters["useBrowser"]=="false" ){
-            auth = InAppBrowserWebAuth.init(this.clientId, a0_url(this.domain));
+            auth = InAppBrowserWebAuth.initWithOptions(this.clientId, a0_url(this.domain), options);
         } else {
             auth = SafariWebAuth.init(this.clientId, a0_url(this.domain));
         }
@@ -150,4 +150,7 @@ export class Auth0 extends Auth0Common {
             }
         });
     }
+
+
+
 }

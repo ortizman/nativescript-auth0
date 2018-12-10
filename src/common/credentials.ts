@@ -22,7 +22,7 @@ export class Credentials {
     public readonly scope: string | undefined;
 
     // customs
-    public readonly extras: { [key:string]: string } | undefined;
+    public extras: { [key:string]: string } | undefined;
 
     constructor(
         accessToken: string | undefined = undefined,

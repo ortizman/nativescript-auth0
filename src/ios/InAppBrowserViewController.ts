@@ -1,5 +1,9 @@
 import { TransactionStore } from './transactionStore';
 import { AuthSession } from './authSession';
+import {
+    WebAuthOptions, CredentialsExtrasKey
+} from './../auth0-common';
+
 
 export class InAppBrowserViewController extends UIViewController {
 
@@ -7,11 +11,7 @@ export class InAppBrowserViewController extends UIViewController {
     private webView: WKWebView;
     private _userContentController: WKUserContentController;
     private url: NSURL;
-    
-    private static REMEMBER_KEY: string="REMEMBER";
-    private static DNI_KEY: string="dni";
-    private static USERCODE_KEY: string="usercode";
-    private static NAME_KEY: string="name";
+    private options: WebAuthOptions
 
     private _hud: any;
 
@@ -65,9 +65,18 @@ export class InAppBrowserViewController extends UIViewController {
         this.url=url;
     }
 
+    public setOptions(options: WebAuthOptions):void{
+        this.options=options;
+        if (options.hostedPageParameters[CredentialsExtrasKey.REMEMBER]!=null && options.hostedPageParameters[CredentialsExtrasKey.REMEMBER]!="false"){
+            NSUserDefaults.standardUserDefaults.setObjectForKey(options.hostedPageParameters[CredentialsExtrasKey.DNI], CredentialsExtrasKey.DNI);
+            NSUserDefaults.standardUserDefaults.setObjectForKey(options.hostedPageParameters[CredentialsExtrasKey.USERCODE], CredentialsExtrasKey.USERCODE);
+            NSUserDefaults.standardUserDefaults.setObjectForKey(options.hostedPageParameters[CredentialsExtrasKey.USERNAME], CredentialsExtrasKey.USERNAME);
+        }
+    }
+
     private includeInitJavascript(userContentController: WKUserContentController): void{
-        if (NSUserDefaults.standardUserDefaults.boolForKey(InAppBrowserViewController.REMEMBER_KEY)!=null && NSUserDefaults.standardUserDefaults.boolForKey(InAppBrowserViewController.REMEMBER_KEY)){
-            let scriptSource = `loadParameters({"${InAppBrowserViewController.DNI_KEY}": "${NSUserDefaults.standardUserDefaults.stringForKey(InAppBrowserViewController.DNI_KEY)}","${InAppBrowserViewController.USERCODE_KEY}": "${NSUserDefaults.standardUserDefaults.stringForKey(InAppBrowserViewController.USERCODE_KEY)}", "${InAppBrowserViewController.NAME_KEY}": "${NSUserDefaults.standardUserDefaults.stringForKey(InAppBrowserViewController.NAME_KEY)}"})`;
+        if (NSUserDefaults.standardUserDefaults.boolForKey(CredentialsExtrasKey.REMEMBER )!=null && NSUserDefaults.standardUserDefaults.boolForKey(CredentialsExtrasKey.REMEMBER)){
+            let scriptSource = `loadParameters({"${CredentialsExtrasKey.DNI}": "${NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.DNI)}","${CredentialsExtrasKey.USERCODE}": "${NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERCODE)}", "${CredentialsExtrasKey.USERNAME}": "${NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERNAME)}"})`;
 
             let script = WKUserScript.alloc().initWithSourceInjectionTimeForMainFrameOnly(scriptSource, WKUserScriptInjectionTime.AtDocumentEnd, true);
             this._userContentController.addUserScript(script);
@@ -75,16 +84,15 @@ export class InAppBrowserViewController extends UIViewController {
     }
 
     public setDefaults(remember: boolean, dni?:string , usercode?: string, name?:string): void {
-        NSUserDefaults.standardUserDefaults.setBoolForKey(remember, InAppBrowserViewController.REMEMBER_KEY);
+        NSUserDefaults.standardUserDefaults.setBoolForKey(remember, CredentialsExtrasKey.REMEMBER);
         if(remember){
-            NSUserDefaults.standardUserDefaults.setObjectForKey(dni, InAppBrowserViewController.DNI_KEY);
-            NSUserDefaults.standardUserDefaults.setObjectForKey(usercode, InAppBrowserViewController.USERCODE_KEY);
-            NSUserDefaults.standardUserDefaults.setObjectForKey(name, InAppBrowserViewController.NAME_KEY);
-
+            NSUserDefaults.standardUserDefaults.setObjectForKey(dni, CredentialsExtrasKey.DNI);
+            NSUserDefaults.standardUserDefaults.setObjectForKey(usercode, CredentialsExtrasKey.USERCODE);
+            NSUserDefaults.standardUserDefaults.setObjectForKey(name, CredentialsExtrasKey.USERNAME);
         } else {
-            NSUserDefaults.standardUserDefaults.removeObjectForKey(InAppBrowserViewController.DNI_KEY);
-            NSUserDefaults.standardUserDefaults.removeObjectForKey(InAppBrowserViewController.USERCODE_KEY);
-            NSUserDefaults.standardUserDefaults.removeObjectForKey(InAppBrowserViewController.NAME_KEY);
+            NSUserDefaults.standardUserDefaults.removeObjectForKey(CredentialsExtrasKey.DNI);
+            NSUserDefaults.standardUserDefaults.removeObjectForKey(CredentialsExtrasKey.USERCODE);
+            NSUserDefaults.standardUserDefaults.removeObjectForKey(CredentialsExtrasKey.USERNAME);
         }
     }
 
@@ -138,7 +146,6 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
     webViewDecidePolicyForNavigationActionDecisionHandler?(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: (p1: WKNavigationActionPolicy) => void): void{
         console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
         if (navigationAction.request.URL.absoluteString.indexOf("callback?code=")!=-1){
-            console.log("--------------------- CALLBACK CODE -----------------");
             let scriptSource:string="$('#remember-data').is(':checked') || !$('#greeting').hasClass('d-none')? $('#login-username').val()+'/'+$('#login-usercode').val() : null; ";
             webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{
                 if (result!=null && result!="null"){

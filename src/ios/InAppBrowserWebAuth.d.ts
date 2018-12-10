@@ -8,6 +8,7 @@ import { WebAuth } from './webAuth';
 import { Result } from './result';
 import { OAuth2Grant } from './oauth2Grant';
 import { InAppBrowserViewController } from './InAppBrowserViewController';
+import { WebAuthOptions } from './../auth0-common';
 export declare class InAppBrowserWebAuth extends WebAuth {
     static NoBundleIdentifier: string;
     readonly clientId: string;
@@ -23,8 +24,10 @@ export declare class InAppBrowserWebAuth extends WebAuth {
     responseType: ResponseType[];
     nonce: string | undefined;
     private authenticationSession;
+    private options;
     static init(clientId: string, url: NSURL, presenter?: ControllerModalPresenter, telemetry?: Telemetry): InAppBrowserWebAuth;
-    constructor(clientId: string, url: NSURL, presenter: ControllerModalPresenter, storage: TransactionStore, telemetry: Telemetry);
+    static initWithOptions(clientId: string, url: NSURL, options: WebAuthOptions): InAppBrowserWebAuth;
+    constructor(clientId: string, url: NSURL, presenter: ControllerModalPresenter, storage: TransactionStore, telemetry: Telemetry, options: WebAuthOptions);
     useUniversalLink(): this;
     setConnection(connection: string): this;
     setScope(scope: string): this;
