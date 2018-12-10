@@ -123,7 +123,6 @@ export class InAppBrowserWebAuth extends WebAuth {
         let state = this.parameters["state"] || generateDefaultState();
         let authorizeURL = this.buildAuthorizeURL(redirectURL, handler.defaults, state);
 
-         
         const { controller, finish } = this.newInAppBrowser(authorizeURL, callback);        
         const session = new AuthSession(redirectURL, state, handler, finish, this.logger);
 
@@ -151,8 +150,6 @@ export class InAppBrowserWebAuth extends WebAuth {
                 });
             } else {
                 invokeOnRunLoop(() => {
-                    console.log("--------------- resultado -----------");
-                    console.log(result);
                     presenting.dismissViewControllerAnimatedCompletion(true, () => {
                         callback(result);
                     });

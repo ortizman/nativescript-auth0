@@ -34,7 +34,8 @@ export class Auth0 extends Auth0Common {
 
     public webAuthentication(options: WebAuthOptions): Promise<Credentials> {
         let auth;
-        if (!options.parameters["useBrowser"]){
+
+        if (!options.parameters["useBrowser"] || options.parameters["useBrowser"]=="false" ){
             auth = InAppBrowserWebAuth.init(this.clientId, a0_url(this.domain));
         } else {
             auth = SafariWebAuth.init(this.clientId, a0_url(this.domain));
