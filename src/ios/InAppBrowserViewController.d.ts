@@ -21,4 +21,6 @@ export declare class InAppBrowserViewController extends UIViewController {
         };
     };
     _onLoadFinished(url: string, error?: string): void;
+    getRememberScript(): string;
+    getRememberScriptDelimiter(): string;
 }

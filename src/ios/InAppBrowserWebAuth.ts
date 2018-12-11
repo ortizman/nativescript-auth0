@@ -165,7 +165,7 @@ export class InAppBrowserWebAuth extends WebAuth {
                 invokeOnRunLoop(() => {
                     presenting.dismissViewControllerAnimatedCompletion(true, () => {
                         if (result.success){
-                            let remember:boolean=NSUserDefaults.standardUserDefaults.boolForKey("remember");
+                            let remember:boolean=NSUserDefaults.standardUserDefaults.boolForKey(CredentialsExtrasKey.REMEMBER);
                             result.success.extras={};
                             if (remember){
                                 result.success.extras.remember="true";
@@ -178,7 +178,6 @@ export class InAppBrowserWebAuth extends WebAuth {
                                 result.success.extras.usercode=null;
                                 result.success.extras.username=null;
                             }
-                        
                             
                         }
                         callback(result);

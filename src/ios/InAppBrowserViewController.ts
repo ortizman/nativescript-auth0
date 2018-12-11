@@ -94,6 +94,7 @@ export class InAppBrowserViewController extends UIViewController {
             NSUserDefaults.standardUserDefaults.removeObjectForKey(CredentialsExtrasKey.USERCODE);
             NSUserDefaults.standardUserDefaults.removeObjectForKey(CredentialsExtrasKey.USERNAME);
         }
+        
     }
 
     public cancel(sender: UIButton): void {
@@ -117,6 +118,16 @@ export class InAppBrowserViewController extends UIViewController {
     public _onLoadFinished(url: string, error?: string) {
         this.webView.hidden=false;
         this.navigationBar.hidden=true;
+    }
+
+    public getRememberScript(): string {
+        let rememberScript=this.options.parameters.rememberScript;
+        return rememberScript;
+    }
+
+    public getRememberScriptDelimiter(): string {
+        let rememberScriptDelimiter=this.options.parameters.rememberScriptDelimiter;
+        return rememberScriptDelimiter;
     }
 
 
@@ -143,14 +154,19 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
       }
 
     webViewDecidePolicyForNavigationActionDecisionHandler?(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: (p1: WKNavigationActionPolicy) => void): void{
-/*         console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
+        /* console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
         console.log(navigationAction.request.URL.absoluteString); */
         if (navigationAction.request.URL.absoluteString.indexOf("callback?code=")!=-1){
-            let scriptSource:string="$('#remember-data').is(':checked') || !$('#greeting').hasClass('d-none')? $('#login-username').val()+'/'+$('#login-usercode').val() : null; ";
-            webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{                
+            let scriptSource:string=this._owner.get().getRememberScript();
+            let rememberScriptDelimiter=this._owner.get().getRememberScriptDelimiter();
+            webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{             
                 if (result!=null && result!="null"){
-                    let arreglo: string[]=result.split("/");
-                    this._owner.get().setDefaults(true, arreglo[0], arreglo[1], arreglo[0]);
+                    let arreglo: string[]=result.split(rememberScriptDelimiter);
+                    if (arreglo[0].indexOf("true")!=-1){
+                        this._owner.get().setDefaults(true, arreglo[1], arreglo[2], arreglo[1]);
+                    } else {
+                        this._owner.get().setDefaults(false);
+                    }
                 } else {
                     this._owner.get().setDefaults(false);
                 }                             
