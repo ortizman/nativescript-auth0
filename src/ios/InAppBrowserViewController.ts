@@ -137,7 +137,6 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
     }
 
     webViewDidFinishNavigation(webView: WKWebView, navigation: WKNavigation): void {
-        console.log("------------------- FINISH");
         if (webView.URL.absoluteString.indexOf("/login")!=-1){
             this._owner.get()._onLoadFinished(webView.URL.absoluteString);
         }

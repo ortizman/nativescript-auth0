@@ -137,8 +137,6 @@ export class Auth0 extends Auth0Common {
                 this.authenticationApi
                     .userInfo(accessToken)
                     .start((result) => {
-                        console.log("USERINFO DEL PLUGIN----------------");
-                        console.log(result);
                         if (result.failure != null) {
                             reject(result.failure);
                         } else {
