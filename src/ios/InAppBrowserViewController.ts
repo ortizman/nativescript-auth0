@@ -144,15 +144,18 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
 
     webViewDecidePolicyForNavigationActionDecisionHandler?(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: (p1: WKNavigationActionPolicy) => void): void{
         console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
+        console.log(navigationAction.request.URL.absoluteString);
         if (navigationAction.request.URL.absoluteString.indexOf("callback?code=")!=-1){
             let scriptSource:string="$('#remember-data').is(':checked') || !$('#greeting').hasClass('d-none')? $('#login-username').val()+'/'+$('#login-usercode').val() : null; ";
             webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{
+                
                 if (result!=null && result!="null"){
                     let arreglo: string[]=result.split("/");
                     this._owner.get().setDefaults(true, arreglo[0], arreglo[1], arreglo[0]);
                 } else {
                     this._owner.get().setDefaults(false);
                 } 
+                console.log(result);
                 decisionHandler(WKNavigationActionPolicy.Allow);               
                 this._owner.get().authOk(navigationAction.request.URL);
                 
