@@ -141,6 +141,7 @@ export class InAppBrowserWebAuth extends WebAuth {
         controller.loadUrl(authorizeURL);
         controller.setOptions(this.options);
         controller.init();
+        controller.setRedirectUri(redirectURL.absoluteString);
         this.presenter.present(controller);
 
         this.storage.store(session);
@@ -163,23 +164,22 @@ export class InAppBrowserWebAuth extends WebAuth {
                 });
             } else {
                 invokeOnRunLoop(() => {
-                    presenting.dismissViewControllerAnimatedCompletion(true, () => {
-                        if (result.success){
-                            let remember:boolean=NSUserDefaults.standardUserDefaults.boolForKey(CredentialsExtrasKey.REMEMBER);
-                            result.success.extras={};
-                            if (remember){
-                                result.success.extras.remember="true";
-                                result.success.extras.dni=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.DNI);
-                                result.success.extras.usercode=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERCODE);
-                                result.success.extras.username=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERNAME);
-                            } else {
-                                result.success.extras.remember="false";
-                                result.success.extras.dni=null;
-                                result.success.extras.usercode=null;
-                                result.success.extras.username=null;
-                            }
-                            
-                        }
+                    if (result.success){
+                        let remember:boolean=NSUserDefaults.standardUserDefaults.boolForKey(CredentialsExtrasKey.REMEMBER);
+                        result.success.extras={};
+                        if (remember){
+                            result.success.extras.remember="true";
+                            result.success.extras.dni=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.DNI);
+                            result.success.extras.usercode=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERCODE);
+                            result.success.extras.username=NSUserDefaults.standardUserDefaults.stringForKey(CredentialsExtrasKey.USERNAME);
+                        } else {
+                            result.success.extras.remember="false";
+                            result.success.extras.dni=null;
+                            result.success.extras.usercode=null;
+                            result.success.extras.username=null;
+                        }                            
+                    }
+                    presenting.dismissViewControllerAnimatedCompletion(false, () => {                        
                         callback(result);
                     });
                 });

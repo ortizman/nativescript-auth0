@@ -5,6 +5,7 @@ export declare class InAppBrowserViewController extends UIViewController {
     private _userContentController;
     private url;
     private options;
+    private redirectUri;
     private _hud;
     viewDidLoad(): void;
     loadUrl(url: NSURL): void;
@@ -23,4 +24,6 @@ export declare class InAppBrowserViewController extends UIViewController {
     _onLoadFinished(url: string, error?: string): void;
     getRememberScript(): string;
     getRememberScriptDelimiter(): string;
+    setRedirectUri(uri: string): void;
+    getRedirectUri(): string;
 }

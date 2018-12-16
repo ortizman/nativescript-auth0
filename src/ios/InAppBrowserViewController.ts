@@ -11,7 +11,8 @@ export class InAppBrowserViewController extends UIViewController {
     private webView: WKWebView;
     private _userContentController: WKUserContentController;
     private url: NSURL;
-    private options: WebAuthOptions
+    private options: WebAuthOptions;
+    private redirectUri: string;
 
     private _hud: any;
 
@@ -54,6 +55,8 @@ export class InAppBrowserViewController extends UIViewController {
         this.view.addSubview(this.webView); 
         
         this.webView.hidden=true;
+        this.webView.translatesAutoresizingMaskIntoConstraints=false;
+        this.view.translatesAutoresizingMaskIntoConstraints=false;
 
      }
 
@@ -104,11 +107,12 @@ export class InAppBrowserViewController extends UIViewController {
 
     public authCancel(): void {
         TransactionStore.shared.clear();
-        this.dismissViewControllerAnimatedCompletion(true, null);
+        this.dismissViewControllerAnimatedCompletion(true, ()=>{
+        });
     }
 
     public authOk(url:NSURL): void {
-        TransactionStore.shared.resume(url, NSDictionary.dictionary());
+        TransactionStore.shared.resume(url, NSDictionary.dictionary());        
     }
 
     public static ObjCExposedMethods = {
@@ -128,6 +132,14 @@ export class InAppBrowserViewController extends UIViewController {
     public getRememberScriptDelimiter(): string {
         let rememberScriptDelimiter=this.options.parameters.rememberScriptDelimiter;
         return rememberScriptDelimiter;
+    }
+
+    public setRedirectUri(uri: string): void{
+        this.redirectUri=uri;
+    }
+
+    public getRedirectUri(): string{
+        return this.redirectUri;
     }
 
 
@@ -154,9 +166,10 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
       }
 
     webViewDecidePolicyForNavigationActionDecisionHandler?(webView: WKWebView, navigationAction: WKNavigationAction, decisionHandler: (p1: WKNavigationActionPolicy) => void): void{
-        /* console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
-        console.log(navigationAction.request.URL.absoluteString); */
-        if (navigationAction.request.URL.absoluteString.indexOf("callback?code=")!=-1){
+        console.log("------------------------- webViewDecidePolicyForNavigationActionDecisionHandler --------------------");
+        console.log(navigationAction.request.URL.absoluteString);
+        let callbackUri = this._owner.get().getRedirectUri();
+        if (navigationAction.request.URL.absoluteString.startsWith(callbackUri)){
             let scriptSource:string=this._owner.get().getRememberScript();
             let rememberScriptDelimiter=this._owner.get().getRememberScriptDelimiter();
             webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{             
@@ -169,9 +182,10 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
                     }
                 } else {
                     this._owner.get().setDefaults(false);
-                }                             
+                }     
+                decisionHandler(WKNavigationActionPolicy.Allow); 
                 this._owner.get().authOk(navigationAction.request.URL);
-                decisionHandler(WKNavigationActionPolicy.Allow);  
+                  
                 
             });                          
         } else if (navigationAction.request.URL.absoluteString.indexOf("naranja://webview.back")!=-1){ 
@@ -181,9 +195,6 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
             decisionHandler(WKNavigationActionPolicy.Allow);
         }
         
-    }
-
-
-    
+    }   
    
 }
