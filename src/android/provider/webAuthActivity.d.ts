@@ -1,6 +1,7 @@
 import Bundle = android.os.Bundle;
 import Intent = android.content.Intent;
 export declare const KEY_REDIRECT_URI: string;
+export declare const BACK_REDIRECT_URI: string;
 export declare const CONNECTION_NAME_EXTRA: string;
 export declare const FULLSCREEN_EXTRA: string;
 export declare class WebAuthActivity extends android.support.v7.app.AppCompatActivity {
