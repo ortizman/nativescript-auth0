@@ -170,24 +170,29 @@ class WKNavigationDelegateImpl extends NSObject implements WKNavigationDelegate 
         console.log(navigationAction.request.URL.absoluteString);
         let callbackUri = this._owner.get().getRedirectUri();
         if (navigationAction.request.URL.absoluteString.startsWith(callbackUri)){
-            let scriptSource:string=this._owner.get().getRememberScript();
-            let rememberScriptDelimiter=this._owner.get().getRememberScriptDelimiter();
-            webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{             
-                if (result!=null && result!="null"){
-                    let arreglo: string[]=result.split(rememberScriptDelimiter);
-                    if (arreglo[0].indexOf("true")!=-1){
-                        this._owner.get().setDefaults(true, arreglo[1], arreglo[2], arreglo[1]);
+            if (this._owner.get().getRememberScript()!=null){
+                let scriptSource:string=this._owner.get().getRememberScript();
+                let rememberScriptDelimiter=this._owner.get().getRememberScriptDelimiter();
+                webView.evaluateJavaScriptCompletionHandler(scriptSource, (result: string, error)=>{             
+                    if (result!=null && result!="null"){
+                        let arreglo: string[]=result.split(rememberScriptDelimiter);
+                        if (arreglo[0].indexOf("true")!=-1){
+                            this._owner.get().setDefaults(true, arreglo[1], arreglo[2], arreglo[1]);
+                        } else {
+                            this._owner.get().setDefaults(false);
+                        }
                     } else {
                         this._owner.get().setDefaults(false);
-                    }
-                } else {
-                    this._owner.get().setDefaults(false);
-                }     
-                decisionHandler(WKNavigationActionPolicy.Allow); 
-                this._owner.get().authOk(navigationAction.request.URL);
-                  
-                
-            });                          
+                    }     
+                    decisionHandler(WKNavigationActionPolicy.Allow); 
+                    this._owner.get().authOk(navigationAction.request.URL);                 
+                }); 
+            } else {
+                    this._owner.get().setDefaults(false);    
+                    decisionHandler(WKNavigationActionPolicy.Allow); 
+                    this._owner.get().authOk(navigationAction.request.URL);  
+            }
+                                     
         } else if (navigationAction.request.URL.absoluteString.indexOf("naranja://webview.back")!=-1){ 
             decisionHandler(WKNavigationActionPolicy.Allow);               
             this._owner.get().authCancel();
